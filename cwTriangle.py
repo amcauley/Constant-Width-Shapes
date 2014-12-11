@@ -2,19 +2,31 @@ import turtle
 import random
 import math
 
-def cwTriangle():
+PARAM_SCR_SEED              = None
+PARAM_FORCE_EQ              = 0
+PARAM_TRIANGLE_RANGE        = 100
+PARAM_BUFFER_SIZE           = 15
+PARAM_DOT_SIZE              = 5
+PARAM_SPECIFY_CIRCLE_PTS    = None
 
-    PARAM_SCR_SEED = None
-    PARAM_FORCE_EQ = 1
-    PARAM_TRIANGLE_RANGE = 200
-    PARAM_BUFFER_SIZE = 30
-    PARAM_DOT_SIZE = 10
+sc = turtle.Screen()
+t = turtle.Turtle()
+
+sc.setup(PARAM_TRIANGLE_RANGE*5,PARAM_TRIANGLE_RANGE*5)
+
+def turtleReset(x,y):
+    print("Turtle Reset "+str((x,y)))
+    t.reset()
+    t.hideturtle()
+    ''' python doc section 24.5.4.3 shows onclick as a mdethod of the turtle class, but it actually belongs to the screen class.
+        similar issue with setup    '''
+    sc.onclick(turtleReset)
+    cwTriangle()
+
+def cwTriangle():
     
     if(PARAM_SCR_SEED != None):
         random.seed(PARAM_SCR_SEED)
-    
-    sc = turtle.Screen()
-    t = turtle.Turtle()
     
     a = [random.randint(-PARAM_TRIANGLE_RANGE,PARAM_TRIANGLE_RANGE),random.randint(-PARAM_TRIANGLE_RANGE,PARAM_TRIANGLE_RANGE)]
     
@@ -102,27 +114,44 @@ def cwTriangle():
         ''' find angle (in rad) of main arc using law of cosines '''
         theta = math.acos((pow(v1[-3],2)+pow(v2[-3],2)-pow(v0[-3],2))/(2*v1[-3]*v2[-3]))
         theta = theta*180/3.14159
+        
+        ''' draw minor arc behind the current vertex's angle '''
         r = v0[-2]
-        h = v0[-1]
-        t.setpos(v0[0],v0[1])
-        t.setheading((h+180)%360)
-        t.forward(r)
-        t.left(90)
-        t.pendown()
-        t.circle(r,-theta/2)
-        t.circle(r,theta)
-        t.penup()
-        r = D - r
+        h = (v0[-1]+180)%360
         t.setpos(v0[0],v0[1])
         t.setheading(h)
         t.forward(r)
         t.left(90)
+        p = t.position()
+        h = t.heading()
         t.pendown()
-        t.circle(r,-theta/2)
-        t.circle(r,theta)
+        t.circle(r,-theta/2,PARAM_SPECIFY_CIRCLE_PTS)
         t.penup()
+        t.setpos(p)
+        t.pendown()
+        t.setheading(h)
+        t.circle(r,theta/2,PARAM_SPECIFY_CIRCLE_PTS)
+        t.penup()
+        
+        ''' draw major arc faced by this vertex's angle '''
+        r = D - r
+        h = v0[-1]
+        t.setpos(v0[0],v0[1])
+        t.setheading(h)
+        t.forward(r)
+        t.left(90)
+        p = t.position()
+        h = t.heading()
+        t.pendown()
+        t.circle(r,-theta/2,PARAM_SPECIFY_CIRCLE_PTS)
+        t.penup()
+        t.setpos(p)
+        t.pendown()
+        t.setheading(h)
+        t.circle(r,theta/2,PARAM_SPECIFY_CIRCLE_PTS)
+        t.penup()
+        
     
-    sc.mainloop()
-
 if __name__ == "__main__":
-    cwTriangle()
+    turtleReset(0,0)
+    sc.mainloop()

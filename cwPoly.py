@@ -1,25 +1,20 @@
 import turtle
 import random
-import math
 import numpy
+import math
+from turtleAux import *
 
-PARAM_POLY_N                = 3
-PARAM_SCR_SEED              = None
-PARAM_FORCE_EQ              = 0
+PARAM_POLY_N                = 7
+PARAM_PTS_OVERRIDE          = 0
+PARAM_BUFFER_SIZE           = 50
+PARAM_OVERRIDE_LEN          = 100
 PARAM_CANVAS_SIZE           = 500
-PARAM_BUFFER_SIZE           = 10
 PARAM_DOT_SIZE              = 5
-PARAM_SPECIFY_CIRCLE_PTS    = None
 PARAM_PENSIZE               = 2
+PARAM_HIDE_TURTLE           = 1
 
 sc = turtle.Screen()
-t0 = turtle.Turtle()
-t1 = turtle.Turtle()
-t = t0
-t1.hideturtle()
-t1.penup()
-t1.speed('fastest')
-cancelDrawing = 0
+t  = turtle.Turtle()
 xyEntry = (0,0)
 entryCnt = 0
 
@@ -27,16 +22,13 @@ sc.setup(PARAM_CANVAS_SIZE, PARAM_CANVAS_SIZE)
 
 def turtleReset(x,y):
     print("Turtle Reset "+str((x,y)))
-    t0.reset()
-    t0.hideturtle()
-    t0.speed('fastest')
-    t0.pensize(PARAM_PENSIZE)
+    t.reset()
+    if(PARAM_HIDE_TURTLE):
+        t.hideturtle()
+    t.speed('fastest')
+    t.pensize(PARAM_PENSIZE)
     sc.onclick(turtleReset)
     cwPoly()
-
-def tPendown(t):
-    if (t == t0):
-        t.pendown()
                 
 
 def enterPoint(x,y):
@@ -81,19 +73,30 @@ def genUserPoly(N, t):
     return ptsList    
                 
 def cwPoly():
-    global t
-    t = t0
-
-    global cancelDrawing
-    cancelDrawing = 0
     
-    pts = genUserPoly(PARAM_POLY_N, t)
+    if (PARAM_PTS_OVERRIDE):
+        rads = 0
+        radDiff = 6.28318530718/PARAM_POLY_N
+        currX = -PARAM_OVERRIDE_LEN*.5
+        currY = -PARAM_OVERRIDE_LEN
+        pts = [(currX, currY)]
+        for j in range(PARAM_POLY_N-1):
+            xd = PARAM_OVERRIDE_LEN*math.cos(rads)
+            yd = PARAM_OVERRIDE_LEN*math.sin(rads)
+            rads = rads + radDiff
+            currX = currX + xd
+            currY = currY + yd
+            pts.append((currX, currY))
+        ''' Reverse points, since rest of code assumes they're in clockwise order. ''' 
+        pts = pts[::-1]
+    else:    
+        pts = genUserPoly(PARAM_POLY_N, t)
     print("Polygon pts: "+str(pts))
     
     dList = []  #distance from vertex to it's sister vertex (the ccw one of the two possible choices)
     jStr = ''   #string that will be used to form the J matrix
     for k in range(PARAM_POLY_N):
-        s = (k + int((PARAM_POLY_N+1)/2))%PARAM_POLY_N       
+        s = (k + int((PARAM_POLY_N-1)/2))%PARAM_POLY_N       
         kx = pts[k][0]
         ky = pts[k][1]
         sx = pts[s][0]
@@ -131,18 +134,24 @@ def cwPoly():
     R = numpy.linalg.inv(J+I)*D2
     print("R = "+str(R))
    
-    '''Main drawing routine to go here. Will be helpful to define turtle helper functions such as drawing
+    ''' Main drawing routine to go here. Will be helpful to define turtle helper functions such as drawing
        line segment from (a,b) to (c,d) and drawing an arc of radius r with center at (x,y), from angle theta
        to angle phi. '''
-    
-        
-    ''' Any routines that were running before this one should be killed. '''
-    cancelDrawing = 1
-    t = t1
+    for k in range(PARAM_POLY_N):
+        ''' Connecting line to next vertex. '''
+        t.color("black")
+        drawLine(pts[k], pts[(k+1)%PARAM_POLY_N], t)
+        ''' Small arc for this vertex. '''
+        s = (k + int((PARAM_POLY_N-1)/2))%PARAM_POLY_N 
+        t.color("red")
+        print(str(k)+". Small arc: (center, rad, xy1, xy2) = "+str((pts[k], R.item(k), pts[s], pts[(s+1)%PARAM_POLY_N])))
+        drawArc(pts[k], R.item(k), pts[s], pts[(s+1)%PARAM_POLY_N], 1, t)
+        ''' Large arc for this vertex. '''
+        t.color("blue")
+        print(str(k)+". Large arc: (center, rad, xy1, xy2) = "+str((pts[k], R.item(k), pts[s], pts[(s+1)%PARAM_POLY_N])))
+        drawArc(pts[k], D - R.item(k), pts[s], pts[(s+1)%PARAM_POLY_N], 0, t)
         
     
 if __name__ == "__main__":
-    if(PARAM_SCR_SEED != None):
-        random.seed(PARAM_SCR_SEED)
     turtleReset(0,0)
     sc.mainloop()

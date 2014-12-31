@@ -5,12 +5,13 @@ import math
 from turtleAux import *
 
 PARAM_POLY_N                = 7
-PARAM_PTS_OVERRIDE          = 0
-PARAM_BUFFER_SIZE           = 50
-PARAM_OVERRIDE_LEN          = 100
+PARAM_PTS_OVERRIDE          = 1
+PARAM_BUFFER_SIZE           = 0
+PARAM_OVERRIDE_LEN          = 150
 PARAM_CANVAS_SIZE           = 500
 PARAM_DOT_SIZE              = 5
 PARAM_PENSIZE               = 2
+PARAM_HIDE_POLY             = 1
 PARAM_HIDE_TURTLE           = 1
 
 sc = turtle.Screen()
@@ -139,8 +140,9 @@ def cwPoly():
        to angle phi. '''
     for k in range(PARAM_POLY_N):
         ''' Connecting line to next vertex. '''
-        t.color("black")
-        drawLine(pts[k], pts[(k+1)%PARAM_POLY_N], t)
+        if not PARAM_HIDE_POLY:
+            t.color("black")
+            drawLine(pts[k], pts[(k+1)%PARAM_POLY_N], t)
         ''' Small arc for this vertex. '''
         s = (k + int((PARAM_POLY_N-1)/2))%PARAM_POLY_N 
         t.color("red")
